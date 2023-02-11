@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lessons</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+    <script src="lessons.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1 v-text="sitename" style="font-family:Trebuchet MS;"></h1>
+        <!-- search field -->
+        <input id="search" type="search" v-model="search" placeholder="Search">
+        <br>
+        <br>
+        <!-- disable button if there is nothing in the cart -->
+        <button @click="showCheckout" :disabled="!cartItemCount > 0">
+            <!-- font awesome icon added for shopping cart -->
+            <span class="fa-solid fa-cart-shopping"></span>
+            <!-- cartItemCount will show the length of the cart next to the checkout button -->
+            {{cartItemCount}}
+            Checkout
+        </button>
+        <!-- div runs if showSubject is true -->
+        <div v-if="showSubject">
+            <br>
+            <h3>Sort by:</h3>
+            <!-- sort radio-buttons -->
+            <input type="radio" value="ascending" v-model="subjectOrder" id="ascending">
+            <label for="ascending">Ascending</label>
+            <input type="radio" value="descending" v-model="subjectOrder" id="descending">
+            <label for="descending">Descending</label>
+            <br>
+            <br>
+            <input type="radio" value="price" v-model="sort" id="price">
+            <label for="price">Price</label>
+            <input type="radio" value="location" v-model="sort" id="location">
+            <label for="price">Location</label>
+            <input type="radio" value="title" v-model="sort" id="title">
+            <label for="title">Subject</label>
+            <input type="radio" value="spaces" v-model="sort" id="spaces">
+            <label for="spaces">Availability</label>
+            <br>
+            <br>
+            <!-- for loop to show all lessons. value called from sortedSubjects -->
+            <div v-for="subject in sortedSubjects">
+                <br>
+                <img width="450" height="350" v-bind:src="subject.image">
+                <h2>{{subject.title}}</h2>
+                <p>Location: {{subject.location}}</p>
+                <p>Price: {{subject.price}}</p>
+                <p>Availabile Spaces: {{subject.spaces}}</p>
+                <!-- disable button if spaces not availabile using canAddToCart -->
+                <button @click="addItem(subject)" :disabled="!canAddToCart(subject)">
+                    Add to Cart
+                    <span class="fa-solid fa-square-plus"></span>
+                </button>
+                <!-- messages to show low spaces or all out -->
+                <span v-if="itemLeft(subject) === 0">
+                    All Out
+                </span>
+                <span v-else-if="itemLeft(subject) < 3">
+                    Only {{itemLeft(subject)}} left!
+                </span>
+                <span v-else>Buy Now!</span>
+            </div>
+        </div>
+        <div v-else>
+            <h2>Checkout</h2>
+            <!-- show lessons in cart -->
+            <div v-for="subject in cart">
+                <img width="450" height="350" v-bind:src="subject.image">
+                <h2>{{subject.title}}</h2>
+                <p>Location: {{subject.location}}</p>
+                <p>Price: AED {{subject.price}}</p>
+                <p>Spaces: {{subject.spaces }}</p>
+                <!-- can remove lesson from cart using remove function -->
+                <button @click="remove(subject.id)">Remove from Cart</button>
+            </div>
+            <!-- take customer details -->
+            <p>
+                <strong>First Name: </strong>
+                <input v-model.trim="order.firstname">
+            </p>
+            <p>
+                <strong>Last Name: </strong>
+                <input v-model.trim="order.lastname">
+            </p>
+            <p>
+                <strong>Phone Number: </strong>
+                <input v-model="order.phone">
+            </p>
+            <!-- display the entered details -->
+            <h2>Order Information</h2>
+            <p>First Name: {{order.firstname}}</p>
+            <p>Last Name: {{order.lastname}}</p>
+            <p>Phone: {{order.phone}}</p>
+            <!-- use js regular expressions to check for valid details -->
+            <button @click="submitForm" 
+            :disabled="!(/^(?!\s*$)[a-zA-Z.+\s'-]+$/.test(this.order.firstname) && /^(?!\s*$)[a-zA-Z.+\s'-]+$/.test(this.order.lastname) && this.order.phone.length === 10)">
+            Checkout</button>
+        </div>
+    </div>
+    <br>
+    <script>
+        // vue instance 
+        let webstore = new Vue({
+            // linking to the div app
+            el: '#app',
+            data: {
+                sitename: 'After School Lessons',
+                showSubject: true,
+                // data is stored in JSON format in lessons.js with subjects array
+                subject: subjects,
+                cart: [],
+                subjectOrder: "",
+                sort: "",
+                search: "",
+                order: {
+                    firstname: "",
+                    lastname: "",
+                    phone: ""
+                },
+                
+            },
+            methods: {
+                addItem(subject) {
+                    this.cart.push(subject);
+                    subject.spaces--;
+                },
+                showCheckout() {
+                    // flips boolean value of showSubject
+                    this.showSubject = this.showSubject ? false : true
+                },
+                submitForm() {
+                    alert("Order Submitted!")
+                },
+                // will return boolean value that is used to disable add to cart button
+                canAddToCart(subject) {
+                    return subject.spaces > this.cartCount(subject.id);
+                },
+                // returns the amount of lessons in the cart
+                cartCount(id) {
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+                // used for the messages according to spaces left
+                itemLeft(subject) {
+                    return subject.spaces - this.cartCount(subject.id)
+                },
+                // returns subject with the given id
+                findSubject(id) {
+                    for (let i = 0; i < this.subject.length; i++) {
+                        if (this.subject[i].id === id) {
+                            return this.subject[i];
+                        }
+                    }
+                },
+                remove(id) {
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i].id === id) {
+                            this.cart.splice(i, 1);
+                            this.findSubject(id).spaces ++;
+                        }
+                    }
+                    // go back to lessons page when cart is emptied
+                    if (this.cart.length === 0) {
+                        this.showSubject = true
+                        this.order.firstname = "";
+                        this.order.lastname = "";
+                        this.order.phone = "";
+
+                    }
+                }
+            },
+            computed: {
+                cartItemCount() {
+                    return this.cart.length || ''
+                },
+                sortedSubjects() {
+                    let subjectArray = this.subject;
+                    // search 
+                    if (this.search) {
+                        subjectArray = subjectArray.filter((subject) => {
+                            return (
+                                subject.title.toUpperCase().includes(this.search.toUpperCase()) || 
+                                subject.location.toUpperCase().includes(this.search.toUpperCase())
+                                );
+                            
+                        });
+                        return subjectArray;
+                    }
+                    // sorting
+                    if (this.sort == "price") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.price > b.price ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.price < b.price ? 1 : -1);
+                        }
+                    } else if (this.sort == "location") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.location > b.location ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.location < b.location ? 1 : -1);
+                        }
+                    } else if (this.sort == "title") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.title > b.title ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.title < b.title ? 1 : -1);
+                        }
+                    } else if (this.sort == "spaces") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.spaces > b.spaces ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.spaces < b.spaces ? 1 : -1);
+                        }
+                        // if none chosen just return subjectArray
+                    } else {
+                        return subjectArray;
+                    }
+
+                }
+
+            }
+        });
+    </script>
+</body>
+
+</html>
