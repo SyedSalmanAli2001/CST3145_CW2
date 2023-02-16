@@ -51,7 +51,7 @@
             <br>
             <br>
             <!-- for loop to show all lessons. value called from sortedSubjects -->
-            <div v-for="subject in subject">
+            <div v-for="subject in sortedSubjects">
                 <br>
                 <img width="450" height="350" v-bind:src="subject.image">
                 <h2>{{subject.topic}}</h2>
@@ -77,13 +77,13 @@
             <h2>Checkout</h2>
             <!-- show lessons in cart -->
             <div v-for="subject in cart">
-                <img width="450" height="350" v-bind:src="subject.image">
+                <img width="450" height="350" v-bind:src="subject.image">   
                 <h2>{{subject.topic}}</h2>
                 <p>Location: {{subject.location}}</p>
                 <p>Price: AED {{subject.price}}</p>
-                <p>Spaces: {{subject.spaces }}</p>
+                <p>Spaces: {{subject.space }}</p>
                 <!-- can remove lesson from cart using remove function -->
-                <button @click="remove(subject.id)">Remove from Cart</button>
+                <button @click="remove(subject._id)">Remove from Cart</button>
             </div>
             <!-- take customer details -->
             <p>
@@ -145,7 +145,7 @@
             methods: {
                 addItem(subject) {
                     this.cart.push(subject);
-                    subject.spaces--;
+                    subject.space--;
                 },
                 showCheckout() {
                     // flips boolean value of showSubject
@@ -156,13 +156,13 @@
                 },
                 // will return boolean value that is used to disable add to cart button
                 canAddToCart(subject) {
-                    return subject.spaces > this.cartCount(subject.id);
+                    return subject.space > this.cartCount(subject._id);
                 },
                 // returns the amount of lessons in the cart
-                cartCount(id) {
+                cartCount(_id) {
                     let count = 0;
                     for (let i = 0; i < this.cart.length; i++) {
-                        if (this.cart[i] === id) {
+                        if (this.cart[i] === _id) {
                             count++;
                         }
                     }
@@ -170,21 +170,21 @@
                 },
                 // used for the messages according to spaces left
                 itemLeft(subject) {
-                    return subject.spaces - this.cartCount(subject.id)
+                    return subject.space - this.cartCount(subject._id)
                 },
                 // returns subject with the given id
-                findSubject(id) {
+                findSubject(_id) {
                     for (let i = 0; i < this.subject.length; i++) {
-                        if (this.subject[i].id === id) {
+                        if (this.subject[i]._id === _id) {
                             return this.subject[i];
                         }
                     }
                 },
-                remove(id) {
+                remove(_id) {
                     for (let i = 0; i < this.cart.length; i++) {
-                        if (this.cart[i].id === id) {
+                        if (this.cart[i]._id === _id) {
                             this.cart.splice(i, 1);
-                            this.findSubject(id).spaces ++;
+                            this.findSubject(_id).space ++;
                         }
                     }
                     // go back to lessons page when cart is emptied
@@ -201,13 +201,14 @@
                 cartItemCount() {
                     return this.cart.length || ''
                 },
+                
                 sortedSubjects() {
                     let subjectArray = this.subject;
                     // search 
                     if (this.search) {
                         subjectArray = subjectArray.filter((subject) => {
                             return (
-                                subject.title.toUpperCase().includes(this.search.toUpperCase()) || 
+                                subject.topic.toUpperCase().includes(this.search.toUpperCase()) || 
                                 subject.location.toUpperCase().includes(this.search.toUpperCase())
                                 );
                             
@@ -215,34 +216,34 @@
                         return subjectArray;
                     }
                     // sorting
-                    // if (this.sort == "price") {
-                    //     if (this.subjectOrder == "ascending") {
-                    //         return subjectArray.sort((a, b) => a.price > b.price ? 1 : -1);
-                    //     } else {
-                    //         return subjectArray.sort((a, b) => a.price < b.price ? 1 : -1);
-                    //     }
-                    // } else if (this.sort == "location") {
-                    //     if (this.subjectOrder == "ascending") {
-                    //         return subjectArray.sort((a, b) => a.location > b.location ? 1 : -1);
-                    //     } else {
-                    //         return subjectArray.sort((a, b) => a.location < b.location ? 1 : -1);
-                    //     }
-                    // } else if (this.sort == "title") {
-                    //     if (this.subjectOrder == "ascending") {
-                    //         return subjectArray.sort((a, b) => a.title > b.title ? 1 : -1);
-                    //     } else {
-                    //         return subjectArray.sort((a, b) => a.title < b.title ? 1 : -1);
-                    //     }
-                    // } else if (this.sort == "spaces") {
-                    //     if (this.subjectOrder == "ascending") {
-                    //         return subjectArray.sort((a, b) => a.spaces > b.spaces ? 1 : -1);
-                    //     } else {
-                    //         return subjectArray.sort((a, b) => a.spaces < b.spaces ? 1 : -1);
-                    //     }
-                    //     // if none chosen just return subjectArray
-                    // } else {
-                    //     return subjectArray;
-                    // }
+                    if (this.sort == "price") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.price > b.price ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.price < b.price ? 1 : -1);
+                        }
+                    } else if (this.sort == "location") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.location > b.location ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.location < b.location ? 1 : -1);
+                        }
+                    } else if (this.sort == "title") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.title > b.title ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.title < b.title ? 1 : -1);
+                        }
+                    } else if (this.sort == "spaces") {
+                        if (this.subjectOrder == "ascending") {
+                            return subjectArray.sort((a, b) => a.spaces > b.spaces ? 1 : -1);
+                        } else {
+                            return subjectArray.sort((a, b) => a.spaces < b.spaces ? 1 : -1);
+                        }
+                        // if none chosen just return subjectArray
+                    } else {
+                        return subjectArray;
+                    }
 
                 }
 
