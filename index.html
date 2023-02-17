@@ -16,7 +16,7 @@
     <div id="app">
         <h1 v-text="sitename" style="font-family:Trebuchet MS;"></h1>
         <!-- search field -->
-        <input id="search" type="search" v-model="search" placeholder="Search">
+        <input id="search" type="search" v-model="search" placeholder="Search" @input="searchLessons">
         <br>
         <br>
         <!-- disable button if there is nothing in the cart -->
@@ -50,7 +50,30 @@
             <label for="spaces">Availability</label>
             <br>
             <br>
-            <!-- for loop to show all lessons. value called from sortedSubjects -->
+            <div v-if="searchResults.length > 0">
+            <div v-for="subject in searchResults">
+                <br>
+                <img width="450" height="350" v-bind:src="subject.image">
+                <h2>{{subject.topic}}</h2>
+                <p>Location: {{subject.location}}</p>
+                <p>Price: {{subject.price}}</p>
+                <p>Availabile Spaces: {{subject.space}}</p>
+                <!-- disable button if spaces not availabile using canAddToCart -->
+                <button @click="addItem(subject)" :disabled="!canAddToCart(subject)">
+                    Add to Cart
+                    <span class="fa-solid fa-square-plus"></span>
+                </button>
+                <!-- messages to show low spaces or all out -->
+                <span v-if="itemLeft(subject) === 0">
+                    All Out
+                </span>
+                <span v-else-if="itemLeft(subject) < 3">
+                    Only {{itemLeft(subject)}} left!
+                </span>
+                <span v-else>Buy Now!</span>
+            </div>
+        </div>
+        <div v-else>
             <div v-for="subject in sortedSubjects">
                 <br>
                 <img width="450" height="350" v-bind:src="subject.image">
@@ -72,6 +95,7 @@
                 </span>
                 <span v-else>Buy Now!</span>
             </div>
+        </div>
         </div>
         <div v-else>
             <h2>Checkout</h2>
@@ -124,12 +148,12 @@
                 subjectOrder: "",
                 sort: "",
                 search: "",
+                searchResults: [],
                 order: {
                     firstname: "",
                     lastname: "",
                     phone: ""
                 },
-                
             },
             created: function(){
                 fetch('http://localhost:3000/collection/lessons').then(
@@ -143,6 +167,16 @@
                 )
             },
             methods: {
+                searchLessons: function() {
+                fetch('http://localhost:3000/collection/lessons/_id?query=' + this.search)
+                .then(response => response.json())
+                .then(data => {
+                    this.searchResults = data;
+                });
+
+
+
+                },
                 addItem(subject) {
                     this.cart.push(subject);
                     subject.space--;
@@ -153,7 +187,9 @@
                 },
                 submitForm() {
                     alert("Order Submitted!")
-                },
+                    // const response = fetch('http://localhost:3000/collection/orders', {
+                    // method: 'POST'
+                    },
                 // will return boolean value that is used to disable add to cart button
                 canAddToCart(subject) {
                     return subject.space > this.cartCount(subject._id);
@@ -204,18 +240,7 @@
                 
                 sortedSubjects() {
                     let subjectArray = this.subject;
-                    // search 
-                    if (this.search) {
-                        subjectArray = subjectArray.filter((subject) => {
-                            return (
-                                subject.topic.toUpperCase().includes(this.search.toUpperCase()) || 
-                                subject.location.toUpperCase().includes(this.search.toUpperCase())
-                                );
-                            
-                        });
-                        return subjectArray;
-                    }
-                    // sorting
+
                     if (this.sort == "price") {
                         if (this.subjectOrder == "ascending") {
                             return subjectArray.sort((a, b) => a.price > b.price ? 1 : -1);
