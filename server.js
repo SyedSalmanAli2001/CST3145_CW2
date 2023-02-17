@@ -57,6 +57,18 @@ app.put('/collection/:collectionName/:id', (req, res, next) => {
 })
 })
 
+app.get('/collection/:collectionName/:id', function(req, res) {
+  const query = req.query.query;
+  const collection = db.collection('lessons');
+
+  collection.find({topic: {$regex: `.*${query}.*`, $options: 'i'}})
+            .toArray(function(err, docs) {
+    res.json(docs);
+  });
+});
+
+
+
 app.listen(3000, () => {
     console.log('Express.js server localhost 3000')
 })
